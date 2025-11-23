@@ -8,101 +8,106 @@
 
 **Phase 1: 0-1,000 Users (Week 1-4)**
 
-![Phase 1 Architecture](../../diagrams/architecture-phase1.png)
+<details>
+<summary>Click to view Phase 1 Architecture Diagram</summary>
 
+```mermaid
+graph TD
+    User[User] --> LB[Load Balancer (Basic)]
+    LB --> App[App Server (t3.medium)\nAPI + WebSocket\n2 vCPU, 4GB RAM]
+    
+    App --> Mongo[(MongoDB M10)]
+    App --> Redis[(Redis 1GB)]
+    App --> S3[(S3 Images)]
+    
+    style App fill:#f9f,stroke:#333,stroke-width:2px
+    style Mongo fill:#dbf,stroke:#333,stroke-width:2px
+    style Redis fill:#dbf,stroke:#333,stroke-width:2px
 ```
-Single Server Architecture
-┌─────────────────────────────────┐
-│  Load Balancer (Basic)          │
-└────────────┬────────────────────┘
-             │
-┌────────────▼────────────────────┐
-│  App Server (t3.medium)         │
-│  - API + WebSocket              │
-│  - 2 vCPU, 4GB RAM              │
-└────────────┬────────────────────┘
-             │
-    ┌────────┼────────┐
-    │        │        │
-    ▼        ▼        ▼
-┌───────┐ ┌──────┐ ┌────────┐
-│MongoDB│ │Redis │ │   S3   │
-│(M10)  │ │(1GB) │ │(Images)│
-└───────┘ └──────┘ └────────┘
+</details>
 
-Cost: $300-500/month
-```
+**Cost**: $300-500/month
 
 **Phase 2: 1,000-5,000 Users (Week 5-8)**
 
-![Phase 2 Architecture](../../diagrams/architecture-phase2.png)
+<details>
+<summary>Click to view Phase 2 Architecture Diagram</summary>
 
+```mermaid
+graph TD
+    User[User] --> ALB[Load Balancer (ALB)]
+    
+    subgraph "Application Layer"
+        ALB --> App1[App 1 (t3.med)]
+        ALB --> App2[App 2 (t3.med)]
+    end
+    
+    subgraph "Data Layer"
+        App1 --> MongoPrimary[(MongoDB Primary)]
+        App2 --> MongoPrimary
+        
+        App1 --> MongoReplica[(MongoDB Read Replica)]
+        App2 --> MongoReplica
+        
+        App1 --> Redis[(Redis Cluster 2GB)]
+        App2 --> Redis
+    end
+    
+    subgraph "Storage"
+        App1 --> S3[(S3)]
+        App2 --> S3
+        S3 -.-> CDN[CDN]
+        CDN -.-> User
+    end
+    
+    style ALB fill:#f96,stroke:#333,stroke-width:2px
+    style App1 fill:#f9f,stroke:#333,stroke-width:2px
+    style App2 fill:#f9f,stroke:#333,stroke-width:2px
 ```
-Horizontal Scaling Architecture
-┌─────────────────────────────────┐
-│  Load Balancer (ALB)            │
-└────────┬─────────┬──────────────┘
-         │         │
-    ┌────▼────┐ ┌──▼───────┐
-    │  App 1  │ │  App 2   │
-    │(t3.med) │ │(t3.med)  │
-    └────┬────┘ └──┬───────┘
-         │         │
-         └────┬────┘
-              │
-    ┌─────────┼─────────┐
-    │         │         │
-    ▼         ▼         ▼
-┌───────┐ ┌───────┐ ┌────────┐
-│MongoDB│ │Redis  │ │   S3   │
-│Primary│ │Cluster│ │+ CDN   │
-│+ Read │ │(2GB)  │ │        │
-│Replica│ │       │ │        │
-172: │       │ │        │
-└───────┘ └───────┘ └────────┘
+</details>
 
-Cost: $800-1,200/month
-```
+**Cost**: $800-1,200/month
 
 **Phase 3: 5,000-10,000 Users (Week 9-12)**
 
-![Phase 3 Architecture](../../diagrams/architecture-phase3.png)
+<details>
+<summary>Click to view Phase 3 Architecture Diagram</summary>
 
+```mermaid
+graph TD
+    User[User] --> ALB[Load Balancer (ALB)]
+    
+    subgraph "Service Layer"
+        ALB --> App1[App 1 (t3.med)]
+        ALB --> App2[App 2 (t3.med)]
+        ALB --> App3[App 3 (t3.med)]
+    end
+    
+    subgraph "Microservices"
+        App1 & App2 & App3 --> AuthSvc[Auth Svc]
+        App1 & App2 & App3 --> MatchSvc[Match Svc]
+        App1 & App2 & App3 --> ChatSvc[Chat Svc]
+    end
+    
+    subgraph "Data Layer"
+        AuthSvc & MatchSvc & ChatSvc --> Mongo[(MongoDB Sharded Cluster)]
+        AuthSvc & MatchSvc & ChatSvc --> Redis[(Redis Cluster 4GB)]
+    end
+    
+    subgraph "Storage"
+        AuthSvc & MatchSvc & ChatSvc --> S3[(S3)]
+        S3 -.-> CDN[CDN]
+        CDN -.-> User
+    end
+    
+    style ALB fill:#f96,stroke:#333,stroke-width:2px
+    style AuthSvc fill:#69f,stroke:#333,stroke-width:2px
+    style MatchSvc fill:#69f,stroke:#333,stroke-width:2px
+    style ChatSvc fill:#69f,stroke:#333,stroke-width:2px
 ```
-Microservices Architecture
-┌─────────────────────────────────┐
-│  Load Balancer (ALB)            │
-└────┬─────┬─────┬─────┬──────────┘
-     │     │     │     │
-     ▼     ▼     ▼     ▼
-┌────────┐ ┌────────┐ ┌────────┐
-│ App 1  │ │ App 2  │ │ App 3  │
-│(t3.med)│ │(t3.med)│ │(t3.med)│
-└────────┘ └────────┘ └────────┘
-     │          │          │
-     └──────────┼──────────┘
-                │
-    ┌───────────┼───────────┐
-    │           │           │
-    ▼           ▼           ▼
-┌─────────┐ ┌─────────┐ ┌─────────┐
-│Auth Svc │ │Match Svc│ │Chat Svc │
-└─────────┘ └─────────┘ └─────────┘
-    │           │           │
-    └───────────┼───────────┘
-                │
-    ┌───────────┼───────────┐
-    │           │           │
-    ▼           ▼           ▼
-┌─────────┐ ┌─────────┐ ┌─────────┐
-│ MongoDB │ │  Redis  │ │   S3    │
-│Primary +│ │ Cluster │ │ + CDN   │
-│2 Replicas│ │ (4GB)   │ │         │
-│(Sharded)│ │         │ │         │
-└─────────┘ └─────────┘ └─────────┘
+</details>
 
-Cost: $1,500-3,000/month
-```
+**Cost**: $1,500-3,000/month
 
 ### Detailed Infrastructure Specifications
 

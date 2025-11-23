@@ -1,6 +1,32 @@
 # User Flow
 
-![User Flow Diagram](../../diagrams/user-flow.png)
+<img src="../../diagram/user-flow.svg"/>
+<details>
+<summary>Click to view User Flow Diagram</summary>
+
+```mermaid
+flowchart TD
+    Start((Start)) --> SignUp[Sign Up Phone/Email]
+    SignUp --> OTP[OTP Verification]
+    OTP --> Profile[Create Profile]
+    Profile --> Prefs[Set Preferences]
+    Prefs --> Feed[Discovery Feed]
+    
+    Feed --> Swipe{Swipe?}
+    Swipe -- Right --> Like[Like]
+    Swipe -- Left --> Pass[Pass]
+    
+    Like --> Match{Match?}
+    Match -- Yes --> Notification[Match Notification]
+    Match -- No --> Feed
+    Pass --> Feed
+    
+    Notification --> Chat[Chat]
+    Chat --> Unmatch{Unmatch?}
+    Unmatch -- Yes --> Feed
+    Unmatch -- No --> Chat
+```
+</details>
 
 ## Complete User Journey
 

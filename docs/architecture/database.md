@@ -2,7 +2,67 @@
 
 ## MongoDB Schema
 
-![Database Schema](../../diagrams/database-schema.png)
+<img src="../../diagram/er.svg" alt="Database Schema">
+
+<details>
+ <summary>Click to view Database Schema Diagram</summary>
+
+ ```mermaid
+erDiagram
+    USERS ||--o{ PROFILES : has
+    USERS ||--o{ SWIPES : makes
+    USERS ||--o{ MATCHES : participates
+    MATCHES ||--o{ MESSAGES : contains
+    
+    USERS {
+        ObjectId _id
+        String phone_number
+        String email
+        String password_hash
+        Boolean is_verified
+        Date created_at
+        Date last_active
+    }
+    
+    PROFILES {
+        ObjectId _id
+        ObjectId user_id
+        String name
+        Number age
+        String gender
+        String bio
+        Object location
+        Array photos
+        Object preferences
+    }
+    
+    SWIPES {
+        ObjectId _id
+        ObjectId swiper_id
+        ObjectId swiped_id
+        String action
+        Date created_at
+    }
+    
+    MATCHES {
+        ObjectId _id
+        ObjectId user1_id
+        ObjectId user2_id
+        Date matched_at
+        Boolean is_active
+    }
+    
+    MESSAGES {
+        ObjectId _id
+        ObjectId match_id
+        ObjectId sender_id
+        String content
+        String message_type
+        Boolean is_read
+        Date sent_at
+    }
+```
+</details>
 
 ### Collections Overview
 
